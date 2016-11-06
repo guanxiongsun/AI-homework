@@ -36,8 +36,25 @@ PNode fringe = new(NODE);//fringe不变作为队头
 PNode Ptill = fringe;//Ptill作为队尾
 PNode BestNode = fringe;//出队的f最小NODE
 PSNode start = new(StateNode);
-state S = { 2,3,4,1,0,5,7,6,8};
+state S = { 3, 4, 2, 1, 0, 5, 7, 6, 8 };
 state D = { 1, 2, 3, 4, 5, 6, 7, 8, 0 };
+
+//随机初始化_line即可
+int S_line[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+int D_line[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+void MakeStateLine(state s, int s_line[]){
+	int index = 0;
+	for (int i = 0; i < Size; i++)
+	{
+		for (int j = 0; j < Size; j++)
+		{
+			s_line[index] = s[i][j];
+			index++;
+		}
+	}
+	return;
+}
+
 
 int Hesititon(state s){
 	int num = 0;
@@ -181,83 +198,146 @@ void Initall(){
 	fringe->f = fringe->g + fringe->h;
 }
 
+//求数组逆序数
+int Invnumber(int s[]){
+	int num = 0;
+	for (int i = 1; i < Size;i++)
+	{
+		for (int j = 0; j < i;j++)
+		{
+			if (s[j]<s[i])
+			{
+				num++;
+			}
+		}
+	}
+	return num;
+}
 
+//判断S->D是否有解
+bool IsSolveble(int s[], int d[]){
+	int a, b;
+	a = Invnumber(s);
+	b = Invnumber(d);
+	a = a % 2;
+	b = b % 2;
+	if (a==b)
+	{
+		return true;
+	}
+	else{
+		return false;
+	}
+}
+
+void PrintState(state s){
+	for (int i = 0; i < Size; i++)
+	{
+		for (int j = 0; j < Size; j++)
+		{
+			cout << s[i][j] << "	";
+		}
+	}
+	cout << endl;
+	return;
+}
 
 int main(){
+	cout << "S is :" << endl;
+	PrintState(S);
+	cout << "D is :" << endl;
+	PrintState(D);
 	Initall();
-	int loop = 0;
-	while (fringe!=NULL&&!Isequal(BestNode->Head->s,D))
+	MakeStateLine(S, S_line);
+	MakeStateLine(D, D_line);
+	if (IsSolveble(S_line,D_line))
 	{
-		loop++;
-		//执行BestNODE可以做的动作BN.head.actcan
-		//	产生一个新的NODE
-		//将所有产生的NODE加入到NODE队列
-		while (!BestNode->Head->acts_can.empty())
+		cout << "Solveble!!!" << endl;
+		while (fringe != NULL&&!Isequal(BestNode->Head->s, D))
 		{
-			PNode Node_new = new (NODE);
-			Node_new->Head = DoAnAction(BestNode->Head, BestNode->Head->acts_can.front());
-			//cout << BestNode->Head->acts_can.front() << endl;
-			BestNode->Head->acts_can.pop_front();
-			Node_new->g = BestNode->g+1;
-			Node_new->h = Hesititon(Node_new->Head->s);
-			Node_new->f = Node_new->g + Node_new->h;
-			Node_new->piror = Ptill;
-			Node_new->next = NULL;
-			Ptill->next = Node_new;
-			Ptill = Node_new;
-		}
-		//删除BestNODE
-		//分三种情况，BestNode是头，BestNode是尾，BestNode在中间
-		if (fringe==BestNode)
-		{
-			fringe = BestNode->next;
-		}
-		else if (Ptill == BestNode)
-		{
-			Ptill = BestNode->piror;
-		}
-		else
-		{
-			BestNode->piror->next = BestNode->next;
-			BestNode->next->piror = BestNode->piror;
-		}
-		free(BestNode);
-				
-		//找到最小的f所在的Node
-		PNode temp = fringe;
-		PNode p_min = fringe;
-		int min = 100;
-		while (temp->next != NULL){
-			if (temp->f < min)
+			//执行BestNODE可以做的动作BN.head.actcan
+			//	产生一个新的NODE
+			//将所有产生的NODE加入到NODE队列
+			while (!BestNode->Head->acts_can.empty())
 			{
-				min = temp->f;
-				p_min = temp;
+				PNode Node_new = new (NODE);
+				Node_new->Head = DoAnAction(BestNode->Head, BestNode->Head->acts_can.front());
+				//cout << BestNode->Head->acts_can.front() << endl;
+				BestNode->Head->acts_can.pop_front();
+				Node_new->g = BestNode->g + 1;
+				Node_new->h = Hesititon(Node_new->Head->s);
+				Node_new->f = Node_new->g + Node_new->h;
+				Node_new->piror = Ptill;
+				Node_new->next = NULL;
+				Ptill->next = Node_new;
+				Ptill = Node_new;
 			}
-			temp = temp->next;
+			//删除BestNODE
+			//分三种情况，BestNode是头，BestNode是尾，BestNode在中间
+			if (fringe == BestNode)
+			{
+				fringe = BestNode->next;
+			}
+			else if (Ptill == BestNode)
+			{
+				Ptill = BestNode->piror;
+			}
+			else
+			{
+				BestNode->piror->next = BestNode->next;
+				BestNode->next->piror = BestNode->piror;
+			}
+			free(BestNode);
+
+			//找到最小的f所在的Node
+			PNode temp = fringe;
+			PNode p_min = fringe;
+			int min = 100;
+			while (temp->next != NULL){
+				if (temp->f < min)
+				{
+					min = temp->f;
+					p_min = temp;
+				}
+				temp = temp->next;
+			}
+			if (Ptill->f < min)
+			{
+				min = Ptill->f;
+				p_min = Ptill;
+			}
+			//将最小值所在的NODE赋值为BestNODE
+			BestNode = p_min;
+			//cout << BestNode->g << "    " << BestNode->h<<endl;
+			//cout << BestNode->Head->acts_done.size() << endl;
 		}
-		if (Ptill->f<min)
+		//输出BestNode的动作序列、
+		cout << "the action sequences is:" << endl;
+		while (!BestNode->Head->acts_done.empty())
 		{
-			min = Ptill->f;
-			p_min = Ptill;
+			switch (BestNode->Head->acts_done.front())
+			{
+				case 4:
+					cout << "left  ";
+					break;
+				case 6:
+					cout << "right  ";
+					break;
+				case 8:
+					cout << "up  ";
+					break;
+				case 2:
+					cout << "down  ";
+					break;
+			}
+			//cout << BestNode->Head->acts_done.front() << " ";
+			BestNode->Head->acts_done.pop_front();
 		}
-		//将最小值所在的NODE赋值为BestNODE
-		BestNode = p_min;
-		//cout << BestNode->g << "    " << BestNode->h<<endl;
-		//cout << BestNode->Head->acts_done.size() << endl;
-		if (loop > Threshold)
-		{
-			cout << "Unsolveble!!" << endl;
-			system("pause");
-			return 0;
-		}
+		cout << endl;
 	}
-	//输出BestNode的动作序列、
-	cout << "the action sequences is:" << endl;
-	while (!BestNode->Head->acts_done.empty())
-	{
-		cout << BestNode->Head->acts_done.front() << " ";
-		BestNode->Head->acts_done.pop_front();
-	}
+	else{
+		cout << "Unsolveble!!" << endl;
+	}	
 	system("pause");
 	return 0;
 }
